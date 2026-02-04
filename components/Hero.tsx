@@ -4,8 +4,8 @@ import { ArrowRight, Play, Globe } from 'lucide-react';
 export const Hero: React.FC = () => {
   return (
     <section id="home" className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-12 md:pt-40 md:pb-24 px-4 md:px-6 overflow-hidden">
-      {/* Background radial gradient */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[1000px] h-[600px] md:h-[1000px] bg-blue-500/5 blur-[120px] rounded-full -z-10" />
+      {/* Background radial gradient - Optimized with pointer-events-none */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[1000px] h-[600px] md:h-[1000px] bg-blue-500/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
       
       <div className="max-w-5xl w-full text-center space-y-8 md:space-y-12">
         {/* Personal Intro Section */}
@@ -17,6 +17,8 @@ export const Hero: React.FC = () => {
                 src="https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/alvinlogo.png?raw=true" 
                 alt="Alvin Profile" 
                 className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
               />
             </div>
           </div>
@@ -29,7 +31,6 @@ export const Hero: React.FC = () => {
           </div>
         </div>
         
-        {/* Header container with extra padding to prevent gradient clipping */}
         <div className="relative py-4 md:py-8">
           <h1 className="text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[1] md:leading-[0.95] text-gradient">
             Short-Form Video Editor & Content Strategist

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
@@ -13,7 +13,6 @@ function App() {
   const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
-    // Global smooth scroll interceptor for anchor tags
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a');
@@ -24,43 +23,51 @@ function App() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
           window.history.pushState(null, '', anchor.hash);
-        } else if (anchor.hash === '#top' || anchor.hash === '#') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          window.history.pushState(null, '', '#');
         }
       }
     };
 
     document.addEventListener('click', handleAnchorClick);
 
+    // Optimized scroll listener
+    let ticking = false;
     const handleScroll = () => {
-      const sections = ['home', 'about', 'work', 'edits', 'services', 'process', 'contact'];
-      const scrollPosition = window.scrollY + 120;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const sections = ['home', 'about', 'work', 'edits', 'services', 'process', 'contact'];
+          const scrollPosition = window.scrollY + 150;
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const offsetTop = element.offsetTop;
-          const height = element.offsetHeight;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + height) {
-            setActiveSection(section);
+          for (const section of sections) {
+            const element = document.getElementById(section);
+            if (element) {
+              const offsetTop = element.offsetTop;
+              const height = element.offsetHeight;
+              if (scrollPosition >= offsetTop && scrollPosition < offsetTop + height) {
+                setActiveSection(section);
+                break;
+              }
+            }
           }
-        }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     const observerOptions = {
       root: null,
-      threshold: 0.1,
-      rootMargin: "0px 0px -10% 0px" 
+      threshold: 0.05,
+      rootMargin: "0px 0px -50px 0px" 
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
+          // Once visible, stop observing to save resources
+          observer.unobserve(entry.target);
         }
       });
     }, observerOptions);
@@ -79,7 +86,7 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#0a0a0a] selection:bg-blue-500/30 overflow-x-hidden">
       <Header activeSection={activeSection} />
       <main>
         <Hero />

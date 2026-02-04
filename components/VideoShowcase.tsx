@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ExternalLink, Play, Sparkles, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ExternalLink, Play, Pause, RotateCcw, Sparkles, X, ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX } from 'lucide-react';
 import ReactPlayer from 'react-player';
 
 type Category = 'All' | 'Shorts' | 'Ads' | 'Motion' | 'Podcast';
@@ -59,21 +59,42 @@ export const VideoShowcase: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<typeof videoSamples[0] | null>(null);
   const [filter, setFilter] = useState<Category>('All');
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [played, setPlayed] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [seeking, setSeeking] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const controlsTimeoutRef = useRef<number | null>(null);
 
   const Player = ReactPlayer as any;
 
   useEffect(() => {
-    let timer: number;
     if (selectedVideo) {
-      timer = window.setTimeout(() => {
+      const timer = window.setTimeout(() => {
         setIsLoading(false);
-      }, 4000);
+      }, 3000);
+      return () => window.clearTimeout(timer);
+    }
+  }, [selectedVideo]);
+
+  // Handle auto-hiding controls
+  useEffect(() => {
+    if (isPlaying && !seeking) {
+      if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
+      controlsTimeoutRef.current = window.setTimeout(() => {
+        setShowControls(false);
+      }, 2500);
+    } else {
+      setShowControls(true);
     }
     return () => {
-      if (timer) window.clearTimeout(timer);
+      if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
     };
-  }, [selectedVideo]);
+  }, [isPlaying, seeking]);
 
   const filteredVideos = useMemo(() => {
     return filter === 'All' ? videoSamples : videoSamples.filter(v => v.category === filter);
@@ -82,12 +103,37 @@ export const VideoShowcase: React.FC = () => {
   const openVideo = (video: typeof videoSamples[0]) => {
     setSelectedVideo(video);
     setIsLoading(true);
+    setIsPlaying(true);
+    setPlayed(0);
+    setShowControls(true);
     document.body.style.overflow = 'hidden';
   };
 
   const closeVideo = () => {
     setSelectedVideo(null);
     document.body.style.overflow = 'auto';
+  };
+
+  const formatTime = (seconds: number) => {
+    const date = new Date(seconds * 1000);
+    const mm = date.getUTCMinutes();
+    const ss = date.getUTCSeconds().toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
+  const handleProgress = (state: { played: number }) => {
+    if (!seeking) setPlayed(state.played);
+  };
+
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPlayed(parseFloat(e.target.value));
+  };
+
+  const handleSeekMouseDown = () => setSeeking(true);
+
+  const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+    setSeeking(false);
+    playerRef.current?.seekTo(parseFloat((e.target as HTMLInputElement).value));
   };
 
   const isEmbed = (url: string) => 
@@ -147,7 +193,13 @@ export const VideoShowcase: React.FC = () => {
         <div ref={scrollContainerRef} className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-12 no-scrollbar px-2">
           {filteredVideos.map((sample) => (
             <div key={sample.id} onClick={() => openVideo(sample)} className="flex-none w-[280px] md:w-[350px] snap-center group relative aspect-[9/16] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-zinc-800 bg-zinc-900 shadow-2xl cursor-pointer">
-              <img src={sample.thumbnail} alt={sample.title} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+              <img 
+                src={sample.thumbnail} 
+                alt={sample.title} 
+                className="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" 
+                loading="lazy"
+                decoding="async"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 transition-opacity" />
               <div className="absolute top-8 left-8"><span className="px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest">{sample.category}</span></div>
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500"><div className="w-20 h-20 rounded-full bg-blue-600/90 flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-transform"><Play className="w-8 h-8 text-white fill-white" /></div></div>
@@ -162,32 +214,29 @@ export const VideoShowcase: React.FC = () => {
       </div>
 
       {selectedVideo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 transform translate-z-0">
           <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl cursor-pointer" onClick={closeVideo} />
           
-          <div className="relative w-full max-w-[450px] aspect-[9/16] bg-black rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border border-zinc-800 shadow-[0_0_150px_rgba(37,99,235,0.2)] animate-in zoom-in duration-300">
+          <div className="relative w-full max-w-[450px] aspect-[9/16] bg-black rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border border-zinc-800 shadow-[0_0_150px_rgba(37,99,235,0.2)] animate-in zoom-in duration-300 will-change-transform" onClick={() => setShowControls(true)}>
             
-            {/* Header Overlay */}
-            <div className="absolute top-8 left-8 right-8 z-[60] flex items-center justify-end pointer-events-none">
+            {/* Top Bar with Close Button */}
+            <div className={`absolute top-0 left-0 right-0 z-[70] p-8 flex justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <button 
-                onClick={closeVideo} 
-                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white pointer-events-auto hover:bg-white/10 transition-colors"
+                onClick={(e) => { e.stopPropagation(); closeVideo(); }} 
+                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {isLoading && (
-              <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 gap-4 transition-opacity duration-500">
+              <div className="absolute inset-0 z-[65] flex flex-col items-center justify-center bg-zinc-950 gap-4">
                 <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                <div className="text-center">
-                  <span className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest">Optimizing Stream...</span>
-                  <span className="block text-[8px] text-zinc-600 mt-1 uppercase tracking-tighter">Syncing components</span>
-                </div>
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Processing Clip...</span>
               </div>
             )}
 
-            <div className="w-full h-full relative z-40 bg-black">
+            <div className="w-full h-full relative z-40 bg-black overflow-hidden">
               {isEmbed(selectedVideo.videoUrl) ? (
                 <iframe
                   src={getEmbedUrl(selectedVideo.videoUrl)}
@@ -196,46 +245,92 @@ export const VideoShowcase: React.FC = () => {
                   onLoad={() => setIsLoading(false)}
                 />
               ) : (
-                <Player 
-                  url={selectedVideo.videoUrl} 
-                  width="100%"
-                  height="100%"
-                  playing={true}
-                  muted={false}
-                  volume={1}
-                  controls={true}
-                  loop={false}
-                  playbackRate={1}
-                  playsinline={true}
-                  onReady={() => setIsLoading(false)}
-                  onStart={() => setIsLoading(false)}
-                  onBufferEnd={() => setIsLoading(false)}
-                  onError={() => setIsLoading(false)}
-                  config={{
-                    vimeo: {
-                      playerOptions: {
-                        autoplay: true,
-                        muted: false,
-                        loop: false
-                      }
-                    },
-                    file: {
-                      attributes: {
-                        style: { width: '100%', height: '100%', objectFit: 'cover' }
-                      }
-                    }
-                  } as any}
-                />
-              )}
-            </div>
+                <>
+                  <Player 
+                    ref={playerRef}
+                    url={selectedVideo.videoUrl} 
+                    width="100%"
+                    height="100%"
+                    playing={isPlaying}
+                    muted={isMuted}
+                    volume={1}
+                    controls={false}
+                    loop={false}
+                    playsinline={true}
+                    onReady={() => setIsLoading(false)}
+                    onProgress={handleProgress}
+                    onDuration={setDuration}
+                    onEnded={() => setIsPlaying(false)}
+                    config={{
+                      file: { attributes: { style: { width: '100%', height: '100%', objectFit: 'cover' } } }
+                    } as any}
+                  />
 
-            {/* Bottom Info Section */}
-            <div className="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none z-50">
-              <div className="inline-block px-3 py-1 rounded-full bg-blue-600/20 border border-blue-600/30 mb-3 backdrop-blur-md">
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{selectedVideo.category}</span>
-              </div>
-              <h3 className="text-3xl font-black text-white uppercase tracking-tight leading-tight">{selectedVideo.title}</h3>
-              <p className="text-zinc-400 text-sm mt-2 max-w-[80%] leading-snug">{selectedVideo.description}</p>
+                  {/* UI Overlay Layer */}
+                  <div className={`absolute inset-0 z-50 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                    
+                    {/* Centered Play Toggle (Mobile Friendly) */}
+                    <div className="absolute inset-0 flex items-center justify-center" onClick={() => setIsPlaying(!isPlaying)}>
+                       <button className={`w-24 h-24 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white transition-all transform ${!isPlaying ? 'scale-110 opacity-100' : 'scale-75 opacity-0'}`}>
+                         {isPlaying ? <Pause className="w-10 h-10 fill-white" /> : <Play className="w-10 h-10 fill-white ml-2" />}
+                       </button>
+                    </div>
+
+                    {/* Integrated Control Panel */}
+                    <div className="p-8 pt-20 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                      <div className="space-y-6">
+                        
+                        {/* Custom Progress Bar */}
+                        <div className="relative h-1 w-full bg-white/10 rounded-full group cursor-pointer overflow-hidden">
+                          <input
+                            type="range"
+                            min={0}
+                            max={0.999999}
+                            step="any"
+                            value={played}
+                            onMouseDown={handleSeekMouseDown}
+                            onChange={handleSeekChange}
+                            onMouseUp={handleSeekMouseUp}
+                            className="absolute inset-0 w-full opacity-0 z-20 cursor-pointer"
+                          />
+                          <div 
+                            className="absolute left-0 top-0 h-full bg-blue-500 rounded-full z-10 transition-all duration-75"
+                            style={{ width: `${played * 100}%` }}
+                          />
+                        </div>
+
+                        {/* Functional Controls Row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-6">
+                            <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-blue-400 transition-colors">
+                              {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                            </button>
+                            <button onClick={() => playerRef.current?.seekTo(0)} className="text-zinc-500 hover:text-white transition-colors">
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                            <span className="text-[10px] font-bold text-zinc-500 tabular-nums">
+                              {formatTime(played * duration)} / {formatTime(duration)}
+                            </span>
+                          </div>
+
+                          <button onClick={() => setIsMuted(!isMuted)} className="text-zinc-500 hover:text-white transition-colors">
+                            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                          </button>
+                        </div>
+
+                        {/* Video Information Branding */}
+                        <div className="space-y-2 border-t border-white/5 pt-6">
+                          <div className="inline-block px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20">
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em]">{selectedVideo.category}</span>
+                          </div>
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">{selectedVideo.title}</h3>
+                          <p className="text-zinc-500 text-xs line-clamp-1 opacity-80">{selectedVideo.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
