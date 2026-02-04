@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Scissors, Zap, Repeat, Layers, LineChart } from 'lucide-react';
+import { Scissors, Zap, Layers, Cpu } from 'lucide-react';
 
 export const Services: React.FC = () => {
   const services = [
     {
       title: "Short-Form Video Editing",
-      description: "High-paced, vertical-first editing designed for TikTok, Reels, and YouTube Shorts.",
+      description: "High-paced, vertical-first editing designed for TikTok, Instagram Reels, and YouTube Shorts.",
       icon: <Scissors className="w-6 h-6 text-blue-500" />,
     },
     {
@@ -20,9 +20,9 @@ export const Services: React.FC = () => {
       icon: <Layers className="w-6 h-6 text-purple-500" />,
     },
     {
-      title: "Performance Strategy",
-      description: "A/B testing hooks, thumbnails, and metadata to ensure content hits the right targets.",
-      icon: <LineChart className="w-6 h-6 text-emerald-500" />,
+      title: "Content Operations & Automation",
+      description: "Designing low-touch content systems using clipping workflows, automation, and AI-assisted processes. Built for personal brands that need minimal input and faceless brands that require full automation.",
+      icon: <Cpu className="w-6 h-6 text-emerald-500" />,
     },
   ];
 

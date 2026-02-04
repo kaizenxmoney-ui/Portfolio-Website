@@ -18,8 +18,22 @@ export const Footer: React.FC = () => {
 
         <div className="flex items-center gap-6 md:gap-8">
           <a href="#" className="text-zinc-500 hover:text-white transition-colors text-sm">Twitter</a>
-          <a href="#" className="text-zinc-500 hover:text-white transition-colors text-sm">LinkedIn</a>
-          <a href="#" className="text-zinc-500 hover:text-white transition-colors text-sm">YouTube</a>
+          <a 
+            href="https://www.instagram.com/ceoxalvin?igsh=dXIxbGlhenowN2pu&utm_source=qr" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-zinc-500 hover:text-white transition-colors text-sm"
+          >
+            Instagram
+          </a>
+          <a 
+            href="https://t.me/ceoxalvin" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-zinc-500 hover:text-white transition-colors text-sm"
+          >
+            Telegram
+          </a>
         </div>
       </div>
     </footer>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -14,10 +13,29 @@ function App() {
   const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
-    // Scroll handling for active navigation state
+    // Global smooth scroll interceptor for anchor tags
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      
+      if (anchor && anchor.hash && anchor.origin === window.location.origin) {
+        e.preventDefault();
+        const element = document.querySelector(anchor.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', anchor.hash);
+        } else if (anchor.hash === '#top' || anchor.hash === '#') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.history.pushState(null, '', '#');
+        }
+      }
+    };
+
+    document.addEventListener('click', handleAnchorClick);
+
     const handleScroll = () => {
       const sections = ['home', 'about', 'work', 'edits', 'services', 'process', 'contact'];
-      const scrollPosition = window.scrollY + 100;
+      const scrollPosition = window.scrollY + 120;
 
       for (const section of sections) {
         const element = document.getElementById(section);
@@ -33,32 +51,16 @@ function App() {
 
     window.addEventListener('scroll', handleScroll);
 
-    // Refined IntersectionObserver for staggered animations
     const observerOptions = {
       root: null,
       threshold: 0.1,
       rootMargin: "0px 0px -10% 0px" 
     };
 
-    let staggerCount = 0;
-    let lastToggleTime = 0;
-
     const observer = new IntersectionObserver((entries) => {
-      const now = Date.now();
-      
-      if (now - lastToggleTime > 500) {
-        staggerCount = 0;
-      }
-      lastToggleTime = now;
-
       entries.forEach((entry) => {
-        if (entry.isIntersecting && !entry.target.classList.contains('is-visible')) {
-          const element = entry.target as HTMLElement;
-          
-          element.style.transitionDelay = `${staggerCount * 150}ms`;
-          element.classList.add('is-visible');
-          
-          staggerCount++;
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
         }
       });
     }, observerOptions);
@@ -70,6 +72,7 @@ function App() {
     });
 
     return () => {
+      document.removeEventListener('click', handleAnchorClick);
       window.removeEventListener('scroll', handleScroll);
       observer.disconnect();
     };

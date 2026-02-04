@@ -16,12 +16,12 @@ export const Process: React.FC = () => {
     {
       number: "03",
       title: "Rapid Iteration",
-      description: "Speed is a feature. We ship, analyze data, and refine the editing style within 24-48 hours to capitalize on trends."
+      description: "Speed is a feature. We ship quickly, analyze performance, and refine the editing style within short feedback loops to capitalize on trends."
     },
     {
       number: "04",
       title: "Scaling Operations",
-      description: "Once we find the winning formula, I optimize the system for volume without sacrificing the core creative quality."
+      description: "Once we find a winning formula, I optimize the system for volume while maintaining creative quality."
     }
   ];
 

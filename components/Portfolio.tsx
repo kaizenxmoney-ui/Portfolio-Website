@@ -1,19 +1,18 @@
-
 import React from 'react';
-import { TrendingUp, BarChart3, Users, Award, Instagram, Globe } from 'lucide-react';
+import { BarChart3, Users, Globe, Instagram } from 'lucide-react';
 
 const projects = [
   {
-    id: '1',
+    id: 'p1',
     title: '250K+ Subscriber Growth Proof',
     category: 'Channel Scaling',
     metrics: '0 to 250,000 in 3 Months',
-    description: 'Built and scaled a YouTube channel from zero to 250,000 subscribers using a Shorts-only strategy. Focused on hook structure, pacing, and repeatable publishing systems.',
+    description: 'Built and scaled a YouTube channel from zero to 250,000 subscribers using a Shorts-only strategy, with a focus on hook structure, pacing, and repeatable publishing systems. The channel was later compromised through a fraudulent collaboration email and ultimately taken down, which reinforced the importance of platform security and operational safeguards.',
     thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/Imageyt.png?raw=true',
     icon: <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
   },
   {
-    id: '2',
+    id: 'p2',
     title: 'Instagram Virality & Reach',
     category: 'Platform Growth',
     metrics: '15M+ Accounts Reached',
@@ -22,7 +21,7 @@ const projects = [
     icon: <Instagram className="w-4 h-4 md:w-5 md:h-5 text-pink-500" />
   },
   {
-    id: '3',
+    id: 'p3',
     title: 'YouTube Shorts Performance',
     category: 'Viral Strategy',
     metrics: '100M+ Shorts Views',
@@ -34,14 +33,14 @@ const projects = [
 
 export const Portfolio: React.FC = () => {
   return (
-    <section id="work" className="py-20 md:py-32 px-4 md:px-6 bg-zinc-950">
+    <section id="work" className="py-20 md:py-32 px-4 md:px-6 bg-zinc-950 relative">
       <div className="max-w-6xl mx-auto space-y-16 md:space-y-24">
         <div className="space-y-6 text-center md:text-left">
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-white">
             Proof of Performance.
           </h2>
           <p className="text-zinc-400 max-w-2xl text-lg md:text-xl leading-relaxed mx-auto md:mx-0">
-            Real results from short-form systems I’ve built and operated.
+            Real results from short-form systems I’ve built and operated. These metrics represent scaled growth through strategic content systems.
           </p>
         </div>
 
@@ -49,13 +48,13 @@ export const Portfolio: React.FC = () => {
           {projects.map((project) => (
             <div 
               key={project.id} 
-              className="group relative flex flex-col glass-effect rounded-[2rem] border border-zinc-800 overflow-hidden hover:border-zinc-600 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.15)] transition-all duration-700 ease-out"
+              className="group relative flex flex-col glass-effect rounded-[2rem] border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.1)] transition-all duration-700 ease-out"
             >
               <div className="aspect-[16/10] relative overflow-hidden bg-zinc-900 shrink-0">
                 <img 
                   src={project.thumbnail} 
                   alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-1000 cubic-bezier(0.16, 1, 0.3, 1) group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                  className="w-full h-full object-cover transition-transform duration-1000 cubic-bezier(0.16, 1, 0.3, 1) group-hover:scale-105 opacity-80 group-hover:opacity-100"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-60 transition-opacity duration-500" />
                 

@@ -19,7 +19,7 @@ export const Contact: React.FC = () => {
       `Message:\n${formData.message}`
     );
     
-    const mailtoUrl = `mailto:creedsbusiness1305@gmail.com?subject=${subject}&body=${body}`;
+    const mailtoUrl = `mailto:contactalvinforwork@gmail.com?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
   };
 
@@ -45,11 +45,11 @@ export const Contact: React.FC = () => {
               </div>
 
               <div className="space-y-4 flex flex-col items-center md:items-start">
-                <a href="mailto:creedsbusiness1305@gmail.com" className="flex items-center gap-3 text-zinc-300 hover:text-white transition-colors">
+                <a href="mailto:contactalvinforwork@gmail.com" className="flex items-center gap-3 text-zinc-300 hover:text-white transition-colors">
                   <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <span className="font-medium text-sm md:text-base">creedsbusiness1305@gmail.com</span>
+                  <span className="font-medium text-sm md:text-base">contactalvinforwork@gmail.com</span>
                 </a>
               </div>
             </div>

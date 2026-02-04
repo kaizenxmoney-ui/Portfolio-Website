@@ -14,7 +14,7 @@ export const About: React.FC = () => {
                 With close to 4 years in video editing and content strategy, I've moved beyond just "making things look good." I focus on why content performs and how to build systems that sustain growth.
               </p>
               <p>
-                In 2023 alone, I scaled a YouTube channel to <span className="text-white font-semibold">250,000 subscribers</span> in three months. In total, my strategies and edits have generated over <span className="text-white font-semibold">300,000,000 views</span> across YouTube and Instagram for both personal channels and high-level clients.
+                In 2023 alone, I scaled a YouTube channel to <span className="text-white font-semibold">250,000 subscribers</span> in three months. In total, the systems and strategies I’ve worked with have generated over <span className="text-white font-semibold">300M views</span> across YouTube and Instagram for personal channels and clients.
               </p>
               <p>
                 I now run an editing team and consult as a strategist, helping creators shift from manual grind to optimized content funnels.
