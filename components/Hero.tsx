@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowRight, Play, Globe } from 'lucide-react';
 
@@ -15,7 +14,7 @@ export const Hero: React.FC = () => {
             <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-zinc-800 bg-zinc-900 overflow-hidden shadow-2xl">
               <img 
-                src="https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/alvinlogo.png?raw=true 
+                src="https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/alvinlogo.png?raw=true" 
                 alt="Alvin Profile" 
                 className="w-full h-full object-cover"
               />
