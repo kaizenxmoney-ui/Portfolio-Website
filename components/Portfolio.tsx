@@ -8,7 +8,7 @@ const projects = [
     category: 'Channel Scaling',
     metrics: '0 to 250,000 in 3 Months',
     description: 'Built and scaled a YouTube channel from zero to 250,000 subscribers using a Shorts-only strategy, with a focus on hook structure, pacing, and repeatable publishing systems. The channel was later compromised through a fraudulent collaboration email and ultimately taken down, which reinforced the importance of platform security and operational safeguards.',
-    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/Imageyt.png?raw=true',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/channel.png?raw=true',
     icon: <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
   },
   {
@@ -17,7 +17,7 @@ const projects = [
     category: 'Platform Growth',
     metrics: '15M+ Accounts Reached',
     description: 'Short-form content systems designed to maximize discovery and non-follower reach across platforms. Emphasis on consistency, volume, and retention-based structure.',
-    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/Instagram.png?raw=true',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/15M.png?raw=true',
     icon: <Instagram className="w-4 h-4 md:w-5 md:h-5 text-pink-500" />
   },
   {
@@ -26,7 +26,7 @@ const projects = [
     category: 'Viral Strategy',
     metrics: '100M+ Shorts Views',
     description: 'Proven performance across multiple Shorts formats and niches. Edits optimized for early retention, pacing, and repeat view behavior.',
-    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/shorts.png?raw=true',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/100M.png?raw=true',
     icon: <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
   }
 ];

@@ -10,7 +10,7 @@ const videoSamples = [
     title: 'Agency Motion Graphics',
     category: 'Motion',
     description: 'High-end dynamic typography and 2D/3D motion assets for agency branding and high-converting performance ads.',
-    thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/motion.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnfoQn3JjJ'
   },
   {
@@ -18,7 +18,7 @@ const videoSamples = [
     title: 'Cinematic Podcast Clips',
     category: 'Podcast',
     description: 'Multi-cam podcast editing with color grading and dynamic punch-ins.',
-    thumbnail: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/cinematicpodcast.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnfoEn3JDN'
   },
   {
@@ -34,7 +34,7 @@ const videoSamples = [
     title: 'Instagram Conversion Ad',
     category: 'Ads',
     description: 'Performance-focused UGC edit designed to drive clicks and sales.',
-    thumbnail: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/instaads.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnfo4n3J24'
   },
   {
@@ -42,7 +42,7 @@ const videoSamples = [
     title: 'Crypto & Web3 Edits',
     category: 'Motion',
     description: 'Stylized technical edits with custom overlays for the Web3 space.',
-    thumbnail: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/crypto.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnf2Rn3J1m'
   },
   {
@@ -50,7 +50,7 @@ const videoSamples = [
     title: 'AI Custom Ads',
     category: 'Ads',
     description: 'Integrating AI-generated visuals into traditional ad workflows.',
-    thumbnail: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/customai.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnfoxn3JIP'
   }
 ];
