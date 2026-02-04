@@ -26,7 +26,7 @@ const videoSamples = [
     title: 'Viral YouTube Shorts',
     category: 'Shorts',
     description: 'Fast-paced edits designed to break the algorithm and maximize retention.',
-    thumbnail: 'https://images.unsplash.com/photo-1611605796826-31d85b307a4a?auto=format&fit=crop&q=80&w=800',
+    thumbnail: 'https://github.com/kaizenxmoney-ui/Portfolio-Website/blob/main/bill.PNG?raw=true',
     videoUrl: 'https://go.screenpal.com/watch/cOnfo2n3JQG'
   },
   {
