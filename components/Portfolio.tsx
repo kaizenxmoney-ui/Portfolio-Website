@@ -35,7 +35,7 @@ export const Portfolio: React.FC = () => {
   return (
     <section id="work" className="py-20 md:py-32 px-4 md:px-6 bg-zinc-950 relative">
       <div className="max-w-6xl mx-auto space-y-16 md:space-y-24">
-        <div className="space-y-6 text-center md:text-left">
+        <div className="space-y-6 text-center md:text-left reveal">
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-white">
             Proof of Performance.
           </h2>
@@ -45,10 +45,11 @@ export const Portfolio: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-          {projects.map((project) => (
+          {projects.map((project, idx) => (
             <div 
               key={project.id} 
-              className="group relative flex flex-col glass-effect rounded-[2rem] border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.1)] transition-all duration-700 ease-out"
+              className="group relative flex flex-col glass-effect rounded-[2rem] border border-zinc-800 overflow-hidden hover:border-zinc-700 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.1)] transition-all duration-700 ease-out reveal"
+              style={{ transitionDelay: `${idx * 150}ms` }}
             >
               <div className="aspect-[16/10] relative overflow-hidden bg-zinc-900 shrink-0">
                 <img 
@@ -83,7 +84,7 @@ export const Portfolio: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative p-8 md:p-16 rounded-[2.5rem] md:rounded-[4rem] bg-gradient-to-br from-blue-600/10 via-zinc-900 to-purple-600/10 border border-zinc-800 flex flex-col items-center justify-center text-center space-y-8 overflow-hidden group">
+        <div className="relative p-8 md:p-16 rounded-[2.5rem] md:rounded-[4rem] bg-gradient-to-br from-blue-600/10 via-zinc-900 to-purple-600/10 border border-zinc-800 flex flex-col items-center justify-center text-center space-y-8 overflow-hidden group reveal">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
           <div className="w-16 h-16 md:w-24 md:h-24 rounded-3xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 rotate-3 group-hover:rotate-0 transition-transform duration-700 shadow-2xl">
             <Globe className="w-8 h-8 md:w-12 md:h-12 text-blue-400 animate-pulse" />

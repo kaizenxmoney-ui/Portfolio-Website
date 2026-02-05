@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ExternalLink, Play, Pause, RotateCcw, Sparkles, X, ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX } from 'lucide-react';
 import ReactPlayer from 'react-player';
+import { ExternalLink, Play, Pause, Sparkles, X, ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX, PictureInPicture2, Maximize2, Minimize2 } from 'lucide-react';
 
 type Category = 'All' | 'Shorts' | 'Ads' | 'Motion' | 'Podcast';
 
@@ -59,8 +59,12 @@ export const VideoShowcase: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<typeof videoSamples[0] | null>(null);
   const [filter, setFilter] = useState<Category>('All');
   const [isLoading, setIsLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isMiniMode, setIsMiniMode] = useState(false);
+  const [isNativePiP, setIsNativePiP] = useState(false);
   const [played, setPlayed] = useState(0);
   const [duration, setDuration] = useState(0);
   const [seeking, setSeeking] = useState(false);
@@ -69,71 +73,130 @@ export const VideoShowcase: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
+  const loadTimeoutRef = useRef<number | null>(null);
 
   const Player = ReactPlayer as any;
 
-  useEffect(() => {
-    if (selectedVideo) {
-      const timer = window.setTimeout(() => {
-        setIsLoading(false);
-      }, 3000);
-      return () => window.clearTimeout(timer);
-    }
-  }, [selectedVideo]);
-
-  // Handle auto-hiding controls
-  useEffect(() => {
-    if (isPlaying && !seeking) {
-      if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
+  const resetControlsTimer = () => {
+    if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
+    if (isPlaying && !seeking && !isMiniMode) {
       controlsTimeoutRef.current = window.setTimeout(() => {
         setShowControls(false);
-      }, 2500);
-    } else {
-      setShowControls(true);
+      }, 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedVideo) {
+      if ((isPlaying || seeking) && !isMiniMode) {
+        resetControlsTimer();
+      } else {
+        if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
+        setShowControls(true);
+      }
     }
     return () => {
       if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
     };
-  }, [isPlaying, seeking]);
+  }, [selectedVideo, isPlaying, seeking, isMiniMode]);
 
   const filteredVideos = useMemo(() => {
     return filter === 'All' ? videoSamples : videoSamples.filter(v => v.category === filter);
   }, [filter]);
 
   const openVideo = (video: typeof videoSamples[0]) => {
+    const isMobile = window.innerWidth < 768;
     setSelectedVideo(video);
     setIsLoading(true);
-    setIsPlaying(true);
+    setIsBuffering(false);
+    setHasError(false);
+    setIsPlaying(!isMobile);
+    setIsMiniMode(false);
+    setIsNativePiP(false);
     setPlayed(0);
     setShowControls(true);
-    document.body.style.overflow = 'hidden';
+    
+    if (loadTimeoutRef.current) window.clearTimeout(loadTimeoutRef.current);
+    loadTimeoutRef.current = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 4000);
+
+    if (isMobile) {
+      document.body.style.overflow = 'hidden';
+    }
   };
 
   const closeVideo = () => {
     setSelectedVideo(null);
+    setIsMiniMode(false);
+    setIsNativePiP(false);
     document.body.style.overflow = 'auto';
+    if (loadTimeoutRef.current) window.clearTimeout(loadTimeoutRef.current);
+  };
+
+  const toggleMiniMode = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsMiniMode(!isMiniMode);
+    if (!isMiniMode) {
+      document.body.style.overflow = 'auto';
+    } else if (window.innerWidth < 768) {
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  const toggleNativePiP = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsNativePiP(!isNativePiP);
+    if (!isNativePiP && !isMiniMode) setIsMiniMode(true);
   };
 
   const formatTime = (seconds: number) => {
     const date = new Date(seconds * 1000);
     const mm = date.getUTCMinutes();
-    const ss = date.getUTCSeconds().toString().padStart(2, '0');
+    const ss = Math.floor(date.getUTCSeconds()).toString().padStart(2, '0');
     return `${mm}:${ss}`;
   };
 
-  const handleProgress = (state: { played: number }) => {
+  const handleProgress = (state: any) => {
     if (!seeking) setPlayed(state.played);
   };
 
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPlayed(parseFloat(e.target.value));
+    const val = parseFloat(e.target.value);
+    setPlayed(val);
+    if (!isEmbed(selectedVideo?.videoUrl || '')) {
+       playerRef.current?.seekTo(val);
+    }
   };
 
-  const handleSeekMouseDown = () => setSeeking(true);
+  const handleSeekMouseDown = () => {
+    setSeeking(true);
+    setShowControls(true);
+    if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
+  };
 
-  const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleSeekMouseUp = (e: any) => {
     setSeeking(false);
-    playerRef.current?.seekTo(parseFloat((e.target as HTMLInputElement).value));
+    playerRef.current?.seekTo(parseFloat(e.target.value));
+    resetControlsTimer();
+  };
+
+  const handleVideoTap = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input[type="range"]')) return;
+
+    if (isMiniMode) {
+      toggleMiniMode();
+      return;
+    }
+
+    if (!showControls) {
+      setShowControls(true);
+      resetControlsTimer();
+    } else {
+      setIsPlaying(!isPlaying);
+      resetControlsTimer();
+    }
   };
 
   const isEmbed = (url: string) => 
@@ -142,14 +205,16 @@ export const VideoShowcase: React.FC = () => {
     url.includes('screenpal.com');
 
   const getEmbedUrl = (url: string) => {
+    const isMobile = window.innerWidth < 768;
+    const autoplay = isMobile ? '0' : '1';
     if (url.includes('gumlet.tv/watch/')) {
       const id = url.split('/watch/')[1].replace('/', '');
-      return `https://play.gumlet.io/embed/${id}?autoplay=1&muted=0&loop=0`;
+      return `https://play.gumlet.io/embed/${id}?autoplay=${autoplay}&muted=1&loop=1&playsinline=1`;
     }
     if (url.includes('screenpal.com/watch/')) {
       const parts = url.split('/watch/');
       const id = parts[parts.length - 1].split('?')[0];
-      return `https://go.screenpal.com/player/${id}?autoplay=1&ff=1`;
+      return `https://go.screenpal.com/player/${id}?autoplay=${autoplay}&ff=1&loop=1&muted=1`;
     }
     return url;
   };
@@ -157,86 +222,128 @@ export const VideoShowcase: React.FC = () => {
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const { scrollLeft, clientWidth } = scrollContainerRef.current;
-      const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+      const step = clientWidth * 0.75;
+      const scrollTo = direction === 'left' ? scrollLeft - step : scrollLeft + step;
       scrollContainerRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
 
   return (
-    <section id="edits" className="py-20 md:py-32 px-4 md:px-6 bg-black relative overflow-hidden">
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+    <section id="edits" className="py-16 md:py-32 px-4 md:px-6 bg-black relative">
+      <div className="absolute top-0 left-0 w-64 md:w-96 h-64 md:h-96 bg-blue-600/5 blur-[50px] md:blur-[120px] rounded-full pointer-events-none" />
       
-      <div className="max-w-7xl mx-auto space-y-12 md:space-y-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-2">
-          <div className="space-y-4">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white flex items-center gap-4">
-              Portfolio <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-blue-500" />
+      <div className="max-w-7xl mx-auto space-y-8 md:space-y-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1 reveal">
+          <div className="space-y-2 md:space-y-4">
+            <h2 className="text-[2rem] leading-tight md:text-7xl font-black tracking-tighter text-white flex items-center gap-3">
+              Portfolio <Sparkles className="w-5 h-5 md:w-12 md:h-12 text-blue-500" />
             </h2>
-            <p className="text-zinc-400 max-w-xl text-lg md:text-xl leading-relaxed">
-              High-impact systems across every vertical content. Swipe to explore the work.
+            <p className="text-zinc-500 max-w-xl text-sm md:text-xl font-medium leading-relaxed">
+              High-impact systems across every vertical. Swipe to explore work.
             </p>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="hidden md:flex gap-2 mr-4">
-              <button onClick={() => scroll('left')} className="w-12 h-12 rounded-full glass-effect border border-zinc-800 flex items-center justify-center hover:bg-white/10 transition-all"><ChevronLeft className="w-6 h-6" /></button>
-              <button onClick={() => scroll('right')} className="w-12 h-12 rounded-full glass-effect border border-zinc-800 flex items-center justify-center hover:bg-white/10 transition-all"><ChevronRight className="w-6 h-6" /></button>
+              <button onClick={() => scroll('left')} className="w-10 h-10 rounded-full glass-effect flex items-center justify-center hover:bg-white/10 transition-all"><ChevronLeft className="w-5 h-5" /></button>
+              <button onClick={() => scroll('right')} className="w-10 h-10 rounded-full glass-effect flex items-center justify-center hover:bg-white/10 transition-all"><ChevronRight className="w-5 h-5" /></button>
             </div>
-            <div className="flex flex-wrap gap-2 p-1 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900/40 border border-zinc-800/50 overflow-x-auto no-scrollbar w-full md:w-auto">
               {(['All', 'Shorts', 'Ads', 'Motion', 'Podcast'] as Category[]).map((cat) => (
-                <button key={cat} onClick={() => setFilter(cat)} className={`px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all ${filter === cat ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>{cat}</button>
+                <button 
+                  key={cat} 
+                  onClick={() => setFilter(cat)} 
+                  className={`whitespace-nowrap px-4 py-2.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${filter === cat ? 'bg-white text-black' : 'text-zinc-600'}`}
+                >
+                  {cat}
+                </button>
               ))}
             </div>
           </div>
         </div>
 
-        <div ref={scrollContainerRef} className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-12 no-scrollbar px-2">
-          {filteredVideos.map((sample) => (
-            <div key={sample.id} onClick={() => openVideo(sample)} className="flex-none w-[280px] md:w-[350px] snap-center group relative aspect-[9/16] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-zinc-800 bg-zinc-900 shadow-2xl cursor-pointer">
-              <img 
-                src={sample.thumbnail} 
-                alt={sample.title} 
-                className="w-full h-full object-cover opacity-50 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" 
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 transition-opacity" />
-              <div className="absolute top-8 left-8"><span className="px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest">{sample.category}</span></div>
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500"><div className="w-20 h-20 rounded-full bg-blue-600/90 flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-transform"><Play className="w-8 h-8 text-white fill-white" /></div></div>
-              <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10 space-y-2 translate-y-4 group-hover:translate-y-0 transition-all duration-500"><h3 className="text-xl md:text-2xl font-black text-white leading-tight tracking-tight uppercase">{sample.title}</h3><p className="text-xs text-zinc-400 font-medium line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity">{sample.description}</p></div>
-            </div>
+        <div 
+          ref={scrollContainerRef} 
+          className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-6 md:pb-12 no-scrollbar px-1 -mx-4 md:mx-0 px-4 md:px-0 scroll-smooth"
+        >
+          {filteredVideos.map((sample, idx) => (
+            <ThumbnailCard 
+              key={sample.id}
+              sample={sample}
+              idx={idx}
+              onClick={() => openVideo(sample)}
+            />
           ))}
         </div>
 
-        <div className="pt-8 text-center">
-          <a href="https://drive.google.com/drive/folders/1xACuCah5-Yme7vX_J4csnfDw5uoTy8fH" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 px-12 py-6 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-sm hover:bg-zinc-200 transition-all shadow-2xl">Full Vault <ExternalLink className="w-5 h-5" /></a>
+        <div className="pt-2 md:pt-8 text-center px-4 reveal">
+          <a 
+            href="https://drive.google.com/drive/folders/1xACuCah5-Yme7vX_J4csnfDw5uoTy8fH" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 md:px-12 py-5 md:py-6 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-[11px] md:text-sm hover:bg-zinc-200 shadow-2xl active:scale-95"
+          >
+            Full Vault <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
+          </a>
         </div>
       </div>
 
       {selectedVideo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 transform translate-z-0">
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl cursor-pointer" onClick={closeVideo} />
+        <div 
+          className={`fixed z-[100] transition-all duration-300 ${isMiniMode 
+            ? 'bottom-6 right-6 w-[180px] md:w-[300px] aspect-[9/16] pointer-events-auto' 
+            : 'inset-0 flex items-center justify-center pointer-events-none'}`}
+        >
+          {!isMiniMode && (
+            <div 
+              className="absolute inset-0 bg-black/95 cursor-pointer pointer-events-auto" 
+              onClick={closeVideo} 
+            />
+          )}
           
-          <div className="relative w-full max-w-[450px] aspect-[9/16] bg-black rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border border-zinc-800 shadow-[0_0_150px_rgba(37,99,235,0.2)] animate-in zoom-in duration-300 will-change-transform" onClick={() => setShowControls(true)}>
-            
-            {/* Top Bar with Close Button */}
-            <div className={`absolute top-0 left-0 right-0 z-[70] p-8 flex justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div 
+            className={`relative group bg-black shadow-2xl overflow-hidden pointer-events-auto ${isMiniMode 
+              ? 'w-full h-full rounded-2xl border border-white/10' 
+              : 'w-full h-full md:h-[90vh] md:max-w-[420px] md:aspect-[9/16] md:rounded-[2rem]'}`}
+          >
+            {/* Aligned Close Button for mobile to match the header's menu button (right-6 w-12 h-12) */}
+            {!isMiniMode && (
               <button 
-                onClick={(e) => { e.stopPropagation(); closeVideo(); }} 
-                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+                onClick={(e) => { e.stopPropagation(); closeVideo(); }}
+                className="absolute top-4 right-6 md:right-4 z-[95] w-12 h-12 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 pointer-events-auto shadow-2xl"
+                title="Close video"
               >
-                <X className="w-6 h-6" />
+                <X className="w-6 h-6 md:w-5 md:h-5" />
               </button>
+            )}
+
+            <div className={`absolute top-0 left-0 right-0 z-[80] p-4 flex items-center justify-between pointer-events-none transition-opacity ${showControls || isMiniMode ? 'opacity-100' : 'opacity-0'}`}>
+               {!isMiniMode ? (
+                 <>
+                   <div className="flex flex-col bg-black/60 p-2 px-3 rounded-xl border border-white/5">
+                      <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest leading-none mb-1">{selectedVideo.category}</span>
+                      <h3 className="text-[10px] md:text-xs font-black text-white uppercase truncate max-w-[120px]">{selectedVideo.title}</h3>
+                   </div>
+                 </>
+               ) : (
+                 <div className="flex items-center gap-2 ml-auto pointer-events-auto">
+                    <button onClick={toggleMiniMode} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90">
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={closeVideo} className="w-8 h-8 rounded-full bg-black/80 border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90">
+                      <X className="w-4 h-4" />
+                    </button>
+                 </div>
+               )}
             </div>
 
-            {isLoading && (
-              <div className="absolute inset-0 z-[65] flex flex-col items-center justify-center bg-zinc-950 gap-4">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Processing Clip...</span>
+            {(isLoading || isBuffering || hasError) && (
+              <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center bg-[#050505]">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin opacity-40" />
               </div>
             )}
 
-            <div className="w-full h-full relative z-40 bg-black overflow-hidden">
+            <div className="w-full h-full relative z-50 bg-black" onClick={handleVideoTap}>
               {isEmbed(selectedVideo.videoUrl) ? (
                 <iframe
                   src={getEmbedUrl(selectedVideo.videoUrl)}
@@ -245,96 +352,154 @@ export const VideoShowcase: React.FC = () => {
                   onLoad={() => setIsLoading(false)}
                 />
               ) : (
-                <>
-                  <Player 
-                    ref={playerRef}
-                    url={selectedVideo.videoUrl} 
-                    width="100%"
-                    height="100%"
-                    playing={isPlaying}
-                    muted={isMuted}
-                    volume={1}
-                    controls={false}
-                    loop={false}
-                    playsinline={true}
-                    onReady={() => setIsLoading(false)}
-                    onProgress={handleProgress}
-                    onDuration={setDuration}
-                    onEnded={() => setIsPlaying(false)}
-                    config={{
-                      file: { attributes: { style: { width: '100%', height: '100%', objectFit: 'cover' } } }
-                    } as any}
-                  />
+                <Player 
+                  ref={playerRef}
+                  url={selectedVideo.videoUrl} 
+                  width="100%"
+                  height="100%"
+                  playing={isPlaying}
+                  muted={isMuted}
+                  pip={isNativePiP}
+                  onEnablePIP={() => setIsNativePiP(true)}
+                  onDisablePIP={() => setIsNativePiP(false)}
+                  volume={1}
+                  controls={false}
+                  loop={true}
+                  playsinline={true}
+                  onReady={() => setIsLoading(false)}
+                  onBuffer={() => setIsBuffering(true)}
+                  onBufferEnd={() => setIsBuffering(false)}
+                  onError={() => { setHasError(true); setIsLoading(false); }}
+                  onProgress={handleProgress}
+                  onDuration={setDuration}
+                  config={{
+                    file: {
+                      attributes: {
+                        style: { width: '100%', height: '100%', objectFit: 'cover' },
+                        playsInline: true,
+                        webkitPlaysInline: true,
+                        preload: 'auto',
+                        muted: true
+                      }
+                    }
+                  } as any}
+                />
+              )}
 
-                  {/* UI Overlay Layer */}
-                  <div className={`absolute inset-0 z-50 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    
-                    {/* Centered Play Toggle (Mobile Friendly) */}
-                    <div className="absolute inset-0 flex items-center justify-center" onClick={() => setIsPlaying(!isPlaying)}>
-                       <button className={`w-24 h-24 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white transition-all transform ${!isPlaying ? 'scale-110 opacity-100' : 'scale-75 opacity-0'}`}>
-                         {isPlaying ? <Pause className="w-10 h-10 fill-white" /> : <Play className="w-10 h-10 fill-white ml-2" />}
-                       </button>
+              <div className={`absolute inset-0 z-[65] transition-opacity ${showControls && !isMiniMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                   <div className="w-16 h-16 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white shadow-2xl">
+                     {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white ml-1" />}
+                   </div>
+                </div>
+
+                <div 
+                  className="absolute bottom-0 left-0 right-0 p-6 pb-12 md:pb-8 pt-20 bg-gradient-to-t from-black via-black/80 to-transparent"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="space-y-6">
+                    <div className="relative h-6 flex items-center cursor-pointer">
+                      <input
+                        type="range"
+                        min={0}
+                        max={0.999999}
+                        step="any"
+                        value={played}
+                        onMouseDown={handleSeekMouseDown}
+                        onTouchStart={handleSeekMouseDown}
+                        onChange={handleSeekChange}
+                        onMouseUp={handleSeekMouseUp}
+                        onTouchEnd={handleSeekMouseUp}
+                        className="w-full h-1 bg-zinc-800 rounded-full appearance-none accent-blue-500"
+                      />
                     </div>
 
-                    {/* Integrated Control Panel */}
-                    <div className="p-8 pt-20 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-                      <div className="space-y-6">
-                        
-                        {/* Custom Progress Bar */}
-                        <div className="relative h-1 w-full bg-white/10 rounded-full group cursor-pointer overflow-hidden">
-                          <input
-                            type="range"
-                            min={0}
-                            max={0.999999}
-                            step="any"
-                            value={played}
-                            onMouseDown={handleSeekMouseDown}
-                            onChange={handleSeekChange}
-                            onMouseUp={handleSeekMouseUp}
-                            className="absolute inset-0 w-full opacity-0 z-20 cursor-pointer"
-                          />
-                          <div 
-                            className="absolute left-0 top-0 h-full bg-blue-500 rounded-full z-10 transition-all duration-75"
-                            style={{ width: `${played * 100}%` }}
-                          />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-6">
+                        <button 
+                          onClick={() => setIsPlaying(!isPlaying)} 
+                          className="text-white active:scale-90 p-2 -m-2"
+                        >
+                          {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                        </button>
+                        <div className="text-[10px] md:text-[11px] font-black text-zinc-400 tabular-nums uppercase tracking-widest">
+                          {formatTime(played * duration)} <span className="mx-2 text-zinc-800">/</span> {formatTime(duration)}
                         </div>
+                      </div>
 
-                        {/* Functional Controls Row */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-6">
-                            <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-blue-400 transition-colors">
-                              {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
-                            </button>
-                            <button onClick={() => playerRef.current?.seekTo(0)} className="text-zinc-500 hover:text-white transition-colors">
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
-                            <span className="text-[10px] font-bold text-zinc-500 tabular-nums">
-                              {formatTime(played * duration)} / {formatTime(duration)}
-                            </span>
-                          </div>
-
-                          <button onClick={() => setIsMuted(!isMuted)} className="text-zinc-500 hover:text-white transition-colors">
-                            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                      <div className="flex items-center gap-4">
+                        {!isEmbed(selectedVideo.videoUrl) && (
+                          <button 
+                            onClick={toggleNativePiP}
+                            className={`p-2 -m-2 ${isNativePiP ? 'text-blue-500' : 'text-zinc-500'}`}
+                          >
+                            <PictureInPicture2 className="w-6 h-6" />
                           </button>
-                        </div>
-
-                        {/* Video Information Branding */}
-                        <div className="space-y-2 border-t border-white/5 pt-6">
-                          <div className="inline-block px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20">
-                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em]">{selectedVideo.category}</span>
-                          </div>
-                          <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">{selectedVideo.title}</h3>
-                          <p className="text-zinc-500 text-xs line-clamp-1 opacity-80">{selectedVideo.description}</p>
-                        </div>
+                        )}
+                        <button 
+                          onClick={() => setIsMuted(!isMuted)} 
+                          className="text-zinc-500 active:scale-90 p-2 -m-2"
+                        >
+                          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                        </button>
                       </div>
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
     </section>
+  );
+};
+
+const ThumbnailCard: React.FC<{ sample: any; idx: number; onClick: () => void }> = ({ sample, idx, onClick }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  return (
+    <div 
+      onClick={onClick} 
+      className="flex-none w-[260px] md:w-[360px] snap-center group relative aspect-[9/16] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-zinc-800 bg-[#0a0a0a] shadow-xl cursor-pointer active:scale-[0.98] transition-transform reveal"
+    >
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-[#0d0d0d] flex items-center justify-center">
+          <Sparkles className="w-8 h-8 text-zinc-900" />
+        </div>
+      )}
+      
+      <img 
+        src={sample.thumbnail} 
+        alt={sample.title} 
+        decoding="async"
+        loading="lazy"
+        className={`w-full h-full object-cover relative z-10 md:transition-transform md:duration-1000 md:group-hover:scale-105 ${isLoaded ? 'opacity-60 md:opacity-50 md:group-hover:opacity-100' : 'opacity-0'}`} 
+        onLoad={() => setIsLoaded(true)}
+      />
+      
+      <div className={`absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-20 ${isLoaded ? 'opacity-90' : 'opacity-0'}`} />
+      
+      <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+        <div className="w-16 h-16 rounded-full bg-blue-600/90 flex items-center justify-center shadow-2xl scale-95 md:scale-75 md:group-hover:scale-100 transition-transform">
+          <Play className="w-6 h-6 text-white fill-white ml-1" />
+        </div>
+      </div>
+
+      <div className="absolute top-6 left-6 z-30">
+        <span className="px-3 py-1 rounded-full bg-black/60 border border-white/10 text-[9px] font-black text-white uppercase tracking-widest shadow-lg">
+          {sample.category}
+        </span>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-1 z-30">
+        <h3 className="text-xl md:text-2xl font-black text-white leading-tight tracking-tight uppercase">
+          {sample.title}
+        </h3>
+        <p className="text-[10px] text-zinc-400 font-bold leading-relaxed line-clamp-2 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity">
+          {sample.description}
+        </p>
+      </div>
+    </div>
   );
 };

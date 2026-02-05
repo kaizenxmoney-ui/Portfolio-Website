@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Scissors, Zap, Layers, Cpu } from 'lucide-react';
 
@@ -29,7 +28,7 @@ export const Services: React.FC = () => {
   return (
     <section id="services" className="py-24 px-6 bg-zinc-950">
       <div className="max-w-6xl mx-auto space-y-16">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 reveal">
           <h2 className="text-3xl md:text-4xl font-bold">Execution meets Strategy.</h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
             I don't just deliver MP4s. I deliver performance improvements and operational clarity.
@@ -38,7 +37,7 @@ export const Services: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {services.map((service, idx) => (
-            <div key={idx} className="p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 hover:border-zinc-700 transition-colors flex gap-6">
+            <div key={idx} className="p-8 rounded-3xl bg-zinc-900/30 border border-zinc-800 hover:border-zinc-700 transition-colors flex gap-6 reveal" style={{ transitionDelay: `${idx * 100}ms` }}>
               <div className="shrink-0 w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800">
                 {service.icon}
               </div>

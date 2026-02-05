@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const Process: React.FC = () => {
@@ -29,7 +28,7 @@ export const Process: React.FC = () => {
     <section id="process" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-16">
-          <div className="lg:w-1/3 space-y-6">
+          <div className="lg:w-1/3 space-y-6 reveal">
             <h2 className="text-3xl md:text-4xl font-bold">Built for teams that need speed.</h2>
             <p className="text-zinc-400">
               My approach is process-oriented. I focus on clarity, speed, and consistency so you can spend more time on high-impact creative work.
@@ -41,7 +40,7 @@ export const Process: React.FC = () => {
 
           <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
             {steps.map((step, idx) => (
-              <div key={idx} className="space-y-4 relative">
+              <div key={idx} className="space-y-4 relative reveal" style={{ transitionDelay: `${idx * 150}ms` }}>
                 <div className="text-4xl font-black text-zinc-800 tracking-tighter">
                   {step.number}
                 </div>
